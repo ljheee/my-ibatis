@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<!DOCTYPE >-->
+<mapper namespace="com.ljheee.ibatis.demo.UserMapper">
+
+    <select id="selectUserById" resultType="com.ljheee.ibatis.demo.User">
+        SELECT * FROM user where id =?
+    </select>
+
+    <select id="selectAll" resultType="com.ljheee.ibatis.demo.User">
+        SELECT * FROM user
+    </select>
+
+</mapper>
+

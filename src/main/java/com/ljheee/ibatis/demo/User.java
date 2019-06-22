@@ -1,7 +1,7 @@
 package com.ljheee.ibatis.demo;
 
 /**
- * Created by lijianhua04 on 2018/10/6.
+ * POJO
  */
 public class User {
     private Integer id;

@@ -37,7 +37,7 @@ public class StringUtil {
      * @param camelCase
      * @return
      */
-    public static String toLine(String camelCase) {
+    public static String camelCaseToUnderscore(String camelCase) {
         Pattern humpPattern = Pattern.compile("[A-Z]");
         Matcher matcher = humpPattern.matcher(camelCase);
         StringBuffer sb = new StringBuffer();
@@ -77,7 +77,6 @@ public class StringUtil {
     public static void main(String[] args) {
         String camelCase = StringUtil.underscoreToCamelCase("cteate_time");
         System.out.println(camelCase);//cteateTime
-
-        System.out.println(toLine("cteateTimeAndUser"));//cteate_time_and_user
+        System.out.println(camelCaseToUnderscore("cteateTimeAndUser"));//cteate_time_and_user
     }
 }

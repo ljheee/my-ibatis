@@ -1,12 +1,12 @@
 package com.ljheee.ibatis.demo;
 
+import java.util.List;
+
 /**
- * Created by lijianhua04 on 2018/10/6.
  */
 public interface UserMapper {
 
-
     User selectUserById(Integer id);
-
+    List<User> selectAll();
 
 }
