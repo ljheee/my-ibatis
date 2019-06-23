@@ -32,3 +32,8 @@
 ###### 还存在的问题
 - mapper.xml XML文件的语法格式检查，如<setect id="selectUserById">必须指定resultType，必须有id；
 - mapper.xml文件和对应的Mapper接口的正确性检查。
+
+
+###### 运行条件
+- 本人环境：IDEA + Java8 + MySQL8；如果是其他MySQL版本，记得更改pom.xml中MySQL驱动的版本，和驱动URL(mysql8的是driver=com.mysql.cj.jdbc.Driver)；
+- 测试用的例子、和sql脚本文件都在demo包下。
