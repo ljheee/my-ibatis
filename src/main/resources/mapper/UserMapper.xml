@@ -3,7 +3,14 @@
 <mapper namespace="com.ljheee.ibatis.demo.UserMapper">
 
     <select id="selectUserById" resultType="com.ljheee.ibatis.demo.User">
-        SELECT * FROM user where id =?
+        SELECT * FROM user where id =#{0}
+    </select>
+
+    <select id="selectUserByIdAndName" resultType="com.ljheee.ibatis.demo.User">
+        SELECT * FROM user where id =#{0} and name=#{1}
+    </select>
+    <select id="selectUserByParams" resultType="com.ljheee.ibatis.demo.User">
+        SELECT * FROM user where id =#{0} and name=#{1} and passwd=#{2} and appid=#{3}
     </select>
 
     <select id="selectAll" resultType="com.ljheee.ibatis.demo.User">

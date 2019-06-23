@@ -20,6 +20,10 @@ public class DefaultSqlSession implements SqlSession {
     private Configuration configuration;
     private Executor executor;
 
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
     public DefaultSqlSession(Configuration configuration) {
         this.configuration = configuration;
         this.executor = new DefaultExecutor(configuration);

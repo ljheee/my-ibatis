@@ -7,6 +7,7 @@ import java.util.List;
 
 /**
  * 测试类
+ * 演示 手写mybatis的执行效果
  */
 public class Mian {
     public static void main(String[] args) {
@@ -20,6 +21,12 @@ public class Mian {
 
         List<User> users = userMapper.selectAll();
         System.out.println(users);
+
+        User user1 = userMapper.selectUserByIdAndName(10, "abc");
+        System.out.println(user1);
+
+        user1 = userMapper.selectUserByParams(10, "abc", "123", "95955542783");
+        System.out.println(user1);
 
 
     }

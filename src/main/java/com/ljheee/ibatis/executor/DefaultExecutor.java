@@ -2,12 +2,15 @@ package com.ljheee.ibatis.executor;
 
 import com.ljheee.ibatis.Configuration;
 import com.ljheee.ibatis.MappedStatement;
+import com.ljheee.ibatis.binding.MapperMethod;
 import com.ljheee.ibatis.util.StringUtil;
 
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Executor默认实现类
@@ -23,16 +26,78 @@ public class DefaultExecutor implements Executor {
     @Override
     public <E> List<E> query(MappedStatement ms, Object parameter) {
 
+/*
+        try {
+            Class<?> aClass = Class.forName(ms.getNamespace());
+            int idx = ms.getMapperId().lastIndexOf(".");
+            String methodName = ms.getMapperId().substring(idx + 1);
+
+            Method[] declaredMethods = aClass.getDeclaredMethods();
+            for (int j = 0; j < declaredMethods.length; j++) {
+                if (methodName.equals(declaredMethods[j].getName())) {
+                    // 重载的方法，
+                    Class<?>[] parameterTypes = declaredMethods[j].getParameterTypes();
+                    System.out.println(parameterTypes);
+                }
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        // mybatis的做法是：根据每个参数类型 args[0].getClass()，进行相应的参数设置 （如LongTypeHandler ps.setLong(i, parameter);）
+
+        Method method  = null;
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        Object[] args = new Object[4];
+        for (int i = 0; i < 4; i++) {
+            Object cast = parameterTypes[i].cast(args);
+            if (parameterTypes[i] == Integer.class) {
+                ps.setInt(i+1,cast);
+            }
+        }
+*/
+
+        Map<String, Object> param = null;
+        if (parameter instanceof Map) {
+            param = (Map<String, Object>) parameter;
+        } else if(parameter == null){
+            param = new HashMap<>();// 无参 的情况
+        } else {
+            //单个参数的情况
+            param = new MapperMethod.ParamMap<Object>();
+            param.put("param1", parameter);
+            param.put("1", parameter);
+
+        }
+        int count = param.size() / 2;
+
+
+        String sql = ms.getSql();
+        String preparedSql = sql;
+
+        //解析SQL，ms.getSql()把#{0}、#{1}...替换成 ？
+        for (int i = 0; i < count; i++) {
+            preparedSql = preparedSql.replace("#{" + i + "}", "?");
+        }
+
         List<E> ret = new ArrayList<>();
         Connection connection = null;
         PreparedStatement prepareStatement = null;
         ResultSet resultSet = null;
         try {
             connection = getConnection();
-            prepareStatement = connection.prepareStatement(ms.getSql());
+            prepareStatement = connection.prepareStatement(preparedSql);
 
             // 参数化
-            parameterize(prepareStatement, parameter);
+//            parameterize(prepareStatement, parameter);
+
+            //遍历 把#{0}、#{1}，取得索引index，去map中get("param"+index)拿到对应的参数值
+            // setParameter(ps, index, parameter)
+            for (int i = 0; i < count; i++) {       // 把这个for循环注释掉，用下面两行替换也可
+                Object value = param.get("param" + (i + 1));
+                parameterize(prepareStatement, (i + 1), value);
+            }
+//            DefaultParameterHandler parameterHandler = new DefaultParameterHandler(ms, parameter);
+//            parameterHandler.setParameters(prepareStatement);
 
             // 执行SQL查询
             resultSet = prepareStatement.executeQuery();
@@ -53,15 +118,15 @@ public class DefaultExecutor implements Executor {
         return ret;
     }
 
-    // 参数化，硬编码ps.setXxx(1,arg[0])，只能设置单个参数；对于多个参数还未实现
-    private void parameterize(PreparedStatement ps, Object parameter) throws SQLException {
+    // 参数化，此处只列举了常用类型
+    private void parameterize(PreparedStatement ps, int index, Object parameter) throws SQLException {
 
         if (parameter instanceof Integer) {
-            ps.setInt(1, (Integer) parameter);
+            ps.setInt(index, (Integer) parameter);
         } else if (parameter instanceof Long) {
-            ps.setLong(1, (Long) parameter);
+            ps.setLong(index, (Long) parameter);
         } else if (parameter instanceof String) {
-            ps.setString(1, (String) parameter);
+            ps.setString(index, (String) parameter);
         }
     }
 
