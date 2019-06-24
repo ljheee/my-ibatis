@@ -12,4 +12,7 @@ import java.util.List;
 public interface Executor {
 
     <E> List<E> query(MappedStatement statement, Object parameter);
+
+    //insert、update、delete语句的执行，都是通过 Executor.update
+    int update(MappedStatement ms, Object parameter);
 }

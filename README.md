@@ -4,6 +4,18 @@
 - https://github.com/ljheee/my-ibatis/tree/my-ibatis1.0
 - https://github.com/ljheee/my-ibatis/tree/my-ibatis2.0
 - https://github.com/ljheee/my-ibatis/tree/my-ibatis3.0
+- https://github.com/ljheee/my-ibatis/tree/my-ibatis4.0
+
+###### 4.0版本
+`新增实现：实现MapperMethod.SqlCommand，完成SQL命令DML类型的区分；
+新增MapperMethod.execute()方法，实现增删改查的类型判断，进而调用sqlSession相关增删改查的方法，取代之前只是在MapperProxy进行查询；
+真正的SQL执行是在Executor中，新增实现的增删改均是调用Executor.update()方法。`
+- 实现了增删改insert、update、delete的功能；
+- 在MapperProxy 中拦截Mapper方法执行后，创建MapperMethod时、除了内部类MethodSignature，还创建了内部类SqlCommand；
+- MapperProxy 拦截Mapper方法执行后，在SqlCommand中解析SQL、区分SQL的DML类型；
+- 新增MapperMethod.execute()方法，实现增删改查的类型判断；
+- Executor.update()真正执行增删改insert、update、delete的功能，就是复用DefaultParameterHandler参数化，执行SQL后获取受影响的行数。
+- 4.0版本的实现，mybatis基本的ORM功能 简约版是实现了。
 
 ###### 3.0版本
 `新增实现：实现MapperMethod.MethodSignature，通过MethodSignature将参数转化为Map；

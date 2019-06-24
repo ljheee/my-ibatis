@@ -17,5 +17,22 @@
         SELECT * FROM user
     </select>
 
+    <!-- insert、update、delete的测试-->
+    <update id="updateUserById" resultType="java.lang.Integer">
+        update user
+        set passwd='hello'
+        where id =#{0}
+    </update>
+
+    <delete id="deleteUserById" resultType="java.lang.Void">
+        delete from user
+        where id =#{0}
+    </delete>
+
+    <insert id="saveUser" resultType="java.lang.Void">
+        insert into user
+        values(#{0} , #{1} , #{2} , #{3})
+    </insert>
+
 </mapper>
 

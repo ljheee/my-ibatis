@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -80,7 +81,12 @@ public class SqlSessionFactory {
         String namespace = root.attribute("namespace").getData().toString();// <mapper namespace="com.ljheee.dao.mapper.IUserDAO">
 
         List<Element> selects = root.elements("select");//还有 insert、update、delete节点
-        for (Element element : selects) {
+        List<Element> allElemnrts = new ArrayList<>();
+        allElemnrts.addAll(selects);
+        allElemnrts.addAll(root.elements("insert"));
+        allElemnrts.addAll(root.elements("update"));
+        allElemnrts.addAll(root.elements("delete"));
+        for (Element element : allElemnrts) {
             String id = element.attribute("id").getData().toString();//就是方法名
             String resultType = element.attribute("resultType").getData().toString();
             String sql = element.getData().toString();

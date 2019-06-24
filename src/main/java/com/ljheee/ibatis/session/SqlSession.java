@@ -9,7 +9,15 @@ import java.util.List;
  */
 public interface SqlSession {
 
-    public <T> T selectOne(String statement, Object parameter);
-    public <T> List<T> selectList(String statement, Object parameter);
-    public <T> T getMapper(Class<?> clazz);
+    <T> T selectOne(String statement, Object parameter);
+
+    <T> List<T> selectList(String statement, Object parameter);
+
+    int insert(String statement, Object parameter);
+
+    int update(String statement, Object parameter);
+
+    int delete(String statement, Object parameter);
+
+    <T> T getMapper(Class<?> clazz);
 }

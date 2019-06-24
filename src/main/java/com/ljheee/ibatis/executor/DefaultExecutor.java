@@ -3,6 +3,7 @@ package com.ljheee.ibatis.executor;
 import com.ljheee.ibatis.Configuration;
 import com.ljheee.ibatis.MappedStatement;
 import com.ljheee.ibatis.binding.MapperMethod;
+import com.ljheee.ibatis.parameter.DefaultParameterHandler;
 import com.ljheee.ibatis.util.StringUtil;
 
 import java.lang.reflect.Field;
@@ -178,5 +179,53 @@ public class DefaultExecutor implements Executor {
     public Connection getConnection() throws SQLException {
         Connection conn = DriverManager.getConnection(configuration.getUrl(), configuration.getUserName(), configuration.getPassword());
         return conn;
+    }
+
+
+    // insert、update、delete 实现
+
+    @Override
+    public int update(MappedStatement ms, Object parameter) {
+        int result = 0;
+        Map<String, Object> param = null;
+        if (parameter instanceof Map) {
+            param = (Map<String, Object>) parameter;
+        } else if(parameter == null){
+            param = new HashMap<>();// 无参 的情况
+        } else {
+            //单个参数的情况
+            param = new MapperMethod.ParamMap<Object>();
+            param.put("param1", parameter);
+            param.put("1", parameter);
+
+        }
+        int count = param.size() / 2;
+
+
+        String sql = ms.getSql();
+        String preparedSql = sql;
+
+        //解析SQL，ms.getSql()把#{0}、#{1}...替换成 ？
+        for (int i = 0; i < count; i++) {
+            preparedSql = preparedSql.replace("#{" + i + "}", "?");
+        }
+        Connection connection = null;
+        PreparedStatement prepareStatement = null;
+        try {
+            connection = getConnection();
+            prepareStatement = connection.prepareStatement(preparedSql);
+
+            // 参数化
+            DefaultParameterHandler parameterHandler = new DefaultParameterHandler(ms, parameter);
+            parameterHandler.setParameters(prepareStatement);
+
+            // 执行SQL
+            prepareStatement.execute();
+            result = prepareStatement.getUpdateCount();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 }

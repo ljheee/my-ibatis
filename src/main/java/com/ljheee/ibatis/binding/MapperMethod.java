@@ -1,6 +1,9 @@
 package com.ljheee.ibatis.binding;
 
 import com.ljheee.ibatis.Configuration;
+import com.ljheee.ibatis.MappedStatement;
+import com.ljheee.ibatis.SqlCommandType;
+import com.ljheee.ibatis.session.SqlSession;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -11,14 +14,11 @@ import java.util.*;
  */
 public class MapperMethod {
 
+    private SqlCommand command;
     private MethodSignature method;
 
-//    public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
-//        this.command = new SqlCommand(config, mapperInterface, method);
-//        this.method = new MethodSignature(config, method);
-//    }
-
     public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
+        this.command = new SqlCommand(config, mapperInterface, method);
         this.method = new MethodSignature(method);
     }
 
@@ -26,13 +26,82 @@ public class MapperMethod {
         return method;
     }
 
+
+    /**
+     * SqlSession执行的入口
+     * 实际都是委托给 executor真正执行SQL
+     *
+     * @param sqlSession
+     * @param args
+     * @return
+     */
+    public Object execute(SqlSession sqlSession, Object[] args) {
+
+        Object result = null;
+        switch (command.getType()) {
+            case INSERT: {
+                Object param = method.convertArgsToSqlCommandParam(args);// 参数转成Map
+                result = rowCountResult(sqlSession.insert(command.getName(), param));
+                break;
+            }
+            case UPDATE: {
+                Object param = method.convertArgsToSqlCommandParam(args);
+                result = rowCountResult(sqlSession.update(command.getName(), param));
+                break;
+            }
+            case DELETE: {
+                Object param = method.convertArgsToSqlCommandParam(args);
+                result = rowCountResult(sqlSession.delete(command.getName(), param));
+                break;
+            }
+            case SELECT:
+                Object param = method.convertArgsToSqlCommandParam(args);
+                String namespaceId = command.getName();
+
+                Class<?> returnType = method.getReturnType();
+                if (Collection.class.isAssignableFrom(returnType)) {
+                    result = sqlSession.selectList(namespaceId, args == null ? null : param);// 用转化后的参数，替换之前硬编码args[0]
+                } else {
+                    result = sqlSession.selectOne(namespaceId, args == null ? null : param);// 用转化后的参数，替换之前硬编码args[0]
+                }
+                break;
+
+            default:
+                throw new RuntimeException("Unknown execution method for: " + command.getName());
+        }
+        return result;
+    }
+
+    private Object rowCountResult(int rowCount) {
+
+        final Object result;
+        if (Void.class.equals(method.getReturnType()) || Void.TYPE.equals((method.getReturnType()))) {
+            result = null;
+        } else if (Integer.class.equals(method.getReturnType()) || Integer.TYPE.equals(method.getReturnType())) {
+            result = rowCount;
+        } else if (Long.class.equals(method.getReturnType()) || Long.TYPE.equals(method.getReturnType())) {
+            result = (long) rowCount;
+        } else if (Boolean.class.equals(method.getReturnType()) || Boolean.TYPE.equals(method.getReturnType())) {
+            result = rowCount > 0;
+        } else {
+            throw new RuntimeException("Mapper method '" + command.getName() + "' has an unsupported return type: " + method.getReturnType());
+        }
+        return result;
+    }
+
     // 通过MethodSignature将参数转化为Map
     public static class MethodSignature {
 
         private final SortedMap<Integer, String> params;
+        private Class<?> returnType;
 
         public MethodSignature(Method method) {
+            this.returnType = method.getReturnType();
             this.params = Collections.unmodifiableSortedMap(getParams(method));
+        }
+
+        public Class<?> getReturnType() {
+            return returnType;
         }
 
         //参数转化
@@ -104,4 +173,61 @@ public class MapperMethod {
 
     }
 
+    public static class SqlCommand {
+        private final String name;// 就是mapperId,保存namespaceId，Mapper接口名+方法名
+        private final SqlCommandType type;
+
+        public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
+            final String methodName = method.getName();
+            final Class<?> declaringClass = method.getDeclaringClass();
+
+            MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass, configuration);
+            if (ms == null) {
+                throw new RuntimeException("Invalid bound statement (not found): " + mapperInterface.getName() + "." + methodName);
+            }
+            this.name = ms.getMapperId();
+
+            // 取SQL的前6个字符；这里走的取巧的方式，因为insert、update、delete、select都是6个字符
+            String sql = ms.getSql().trim().substring(0, 6);
+            switch (sql) {
+                case "insert":
+                case "INSERT":
+                    this.type = SqlCommandType.INSERT;
+                    break;
+
+                case "update":
+                case "UPDATE":
+                    this.type = SqlCommandType.UPDATE;
+                    break;
+
+                case "delete":
+                case "DELETE":
+                    this.type = SqlCommandType.DELETE;
+                    break;
+
+                case "select":
+                case "SELECT":
+                    this.type = SqlCommandType.SELECT;
+                    break;
+
+                default:
+                    this.type = SqlCommandType.UNKNOWN;
+                    break;
+            }
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public SqlCommandType getType() {
+            return type;
+        }
+
+        private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
+                                                       Class<?> declaringClass, Configuration configuration) {
+            String statementId = mapperInterface.getName() + "." + methodName;
+            return configuration.getMappedStatements().get(statementId);
+        }
+    }
 }

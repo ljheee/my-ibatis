@@ -29,5 +29,18 @@ public class Mian {
         System.out.println(user1);
 
 
+        // insert、update、delete的测试
+//        System.out.println("==================================");
+//        int count = userMapper.updateUserById(11);
+//        System.out.println(count);// 1
+//        System.out.println(userMapper.selectUserById(11));// User{id=11, name='ljh', passwd='hello', appid='95955542780'}
+//
+//        userMapper.saveUser(6,"ljheee","password","appid");
+//        System.out.println(userMapper.selectUserById(6));
+//
+//        userMapper.deleteUserById(6);
+//        System.out.println(userMapper.selectUserById(6));// null
+
+
     }
 }

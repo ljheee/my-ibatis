@@ -46,6 +46,25 @@ public class DefaultSqlSession implements SqlSession {
         return executor.query(mappedStatement, parameter);
     }
 
+    // insert、update、delete
+    @Override
+    public int update(String statement, Object parameter) {
+        MappedStatement ms = configuration.getMappedStatements().get(statement);
+        return executor.update(ms, parameter);
+    }
+
+    @Override
+    public int insert(String statement, Object parameter) {
+        MappedStatement ms = configuration.getMappedStatements().get(statement);
+        return executor.update(ms, parameter);  // insert 和delete在底层executor执行SQL时，均用的update方式
+    }
+
+    @Override
+    public int delete(String statement, Object parameter) {
+        MappedStatement ms = configuration.getMappedStatements().get(statement);
+        return executor.update(ms, parameter);
+    }
+
     @Override
     public <T> T getMapper(Class<?> clazz) {
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, new MapperProxy<T>(this, clazz));
