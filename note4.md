@@ -3,7 +3,7 @@
 目前实现了查询功能（单个参数、无参和多个查询参数），并能对SQL中的#{0}、#{1}进行参数替换，在已有的功能前提下，实现‘增删改’还是不难的。
 MapperProxy拦截到Mapper接口执行的方法，构造MethodSignature将Object[] args参数数组转化为Map，让executor执行SQL就行了，executor执行SQL之前的参数化功能是相同的，直接复用DefaultParameterHandler即可。
 
-重点是如何区分Mapper接口中执行的方法，是select查询，还是insert、update、delete增删改？
+<p>重点是如何区分Mapper接口中执行的方法，是select查询，还是insert、update、delete增删改？</p>
 大致分析一下，之前的版本在实现查询时，是直接在MapperProxy.invoke()方法 调用了sqlSession.selectList或sqlSession.selectOne实现查询，如果要实现insert、update、delete增删改，大概也应该在这个地方实现，可以根据SQL语句字符串前缀，解析出是insert、update、delete的哪一种。然后也是调用sqlSession对应insert、update、delete的方法，因为SqlSession是暴露给用户可直接操作的接口，增删改查的API都在此接口定义了。
 
 新增SqlCommandType枚举，对应SQL类型
@@ -217,7 +217,7 @@ SqlSession 并不复杂SQL真正的执行，实际都是委托给 executor真正
 想到这里，我先行一步，在Executor中也定义了增删改的方法；并在 sqlSession 的实现类DefaultSqlSession中，对新增接口进行实现，是调用executor的方法。
 等这么实现完之后，发现mybatis的Executor，只定义了查询和update的方法，没有insert和delete，在 DefaultSqlSession中的insert和delete也是调用executor.update。
 
-**静坐片刻，想想为什么呢？**
+<p>静坐片刻，想想为什么呢？</p>
 insert 和 delete在底层executor执行SQL时，均用的update方式。
 这也能理解，毕竟在很久之前，没有用ORM框架的时候，手写JDBC执行SQL时，insert、update、delete语句的执行都是prepareStatement.execute();
 在执行prepareStatement.execute()之前，我们需要做的是用预编译的SQL创建prepareStatement，然后为prepareStatement设置参数，然后就能prepareStatement.execute()执行了。
@@ -313,7 +313,7 @@ Object parameter参数对象，之前分析过，就是在 MapperProxy中创建�
 ###### 增删改 功能测试
 之前的功能只实现了查询，在SqlSessionFactory初始化时，用dom4j只解析了<select>查询的节点`List<Element> selects = root.elements("select");`，
 SqlSessionFactory新增对`<insert>、<update>、<delete>`节点元素的解析。
-
+<br/>
 完成之后，在自己用于测试的 UserMapper 中新增增删改的接口：
 ```java
 public interface UserMapper {
@@ -330,7 +330,7 @@ public interface UserMapper {
 }
 ```
 saveUser、updateUserById、deleteUserById对应的UserMapper.xml中的SQL：
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <mapper namespace="com.ljheee.ibatis.demo.UserMapper">
 
@@ -352,12 +352,8 @@ saveUser、updateUserById、deleteUserById对应的UserMapper.xml中的SQL：
     </insert>
 </mapper>
 ```
-测试类，测试方法均测试通过。
+测试类，演示 手写mybatis的执行效果；测试方法均测试通过。
 ```java
-/**
- * 测试类
- * 演示 手写mybatis的执行效果
- */
 public class Mian {
     public static void main(String[] args) {
 
